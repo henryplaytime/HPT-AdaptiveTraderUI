@@ -1,0 +1,33 @@
+# ---- .NET build output ----
+bin/
+obj/
+artifacts/
+*.user
+*.suo
+
+# ---- IDE ----
+.vs/
+.vscode/
+*.DotSettings.user
+
+# ---- Distributable binaries (published via releases, never committed) ----
+dist/
+*.zip
+*.7z
+*.nupkg
+
+# ---- Local game references (never commit EFT/SPT/BepInEx assemblies) ----
+lib/
+*.dll
+*.pdb
+*.mdb
+
+# ---- Local scratch / analysis ----
+_analysis/
+_diag/
+*.log
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini

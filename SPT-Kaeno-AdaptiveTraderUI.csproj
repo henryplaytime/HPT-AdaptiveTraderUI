@@ -1,0 +1,88 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kaeno-AdaptiveTraderUI
+    SPT 4.1.6 / EFT 1.0.x 商人界面增强 BepInEx 插件。
+
+    构建前必须指定 SPT 安装目录（该目录下应有 BepInEx\ 和 EscapeFromTarkov_Data\）：
+      dotnet build -c Release -p:GameDir="D:\你的SPT目录\Escape From Tarkov_4.1.6"
+    或先设置环境变量：
+      $env:SPT_GAME_DIR = "D:\你的SPT目录\Escape From Tarkov_4.1.6"
+      dotnet build -c Release
+
+    游戏/SPT/BepInEx 程序集仅用于本地编译引用，不随本仓库分发，也不要提交到仓库。
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Kaeno-AdaptiveTraderUI</AssemblyName>
+    <RootNamespace>KaenoAdaptiveTraderUI</RootNamespace>
+    <Version>4.2.4</Version>
+    <AssemblyVersion>4.2.4.0</AssemblyVersion>
+    <FileVersion>4.2.4.0</FileVersion>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <DebugType>none</DebugType>
+    <NoWarn>$(NoWarn);CS0649;CS0169</NoWarn>
+    <!-- 源文件为 UTF-8（无 BOM），显式指定避免某些 Windows/CP936 环境把中文注释解成乱码 -->
+    <CodePage>65001</CodePage>
+    <!-- SPT 安装目录：优先命令行 -p:GameDir=...，其次环境变量 SPT_GAME_DIR -->
+    <GameDir Condition="'$(GameDir)' == ''">$(SPT_GAME_DIR)</GameDir>
+  </PropertyGroup>
+
+  <Target Name="EnsureGameDir" BeforeTargets="PrepareForBuild" Condition="'$(GameDir)' == ''">
+    <Error Text="未指定 SPT 安装目录。请使用 dotnet build -c Release -p:GameDir=&quot;你的SPT目录\Escape From Tarkov_4.1.6&quot;，或设置环境变量 SPT_GAME_DIR。" />
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(GameDir)\BepInEx\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameDir)\BepInEx\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="spt-reflection">
+      <HintPath>$(GameDir)\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameDir)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Comfort">
+      <HintPath>$(GameDir)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(GameDir)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameDir)\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(GameDir)\EscapeFromTarkov_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(GameDir)\EscapeFromTarkov_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Sirenix.Serialization">
+      <HintPath>$(GameDir)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

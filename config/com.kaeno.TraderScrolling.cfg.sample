@@ -1,0 +1,39 @@
+## ===== Kaeno-AdaptiveTraderUI v4.2.4 示例配置 =====
+## 首次启动游戏后，BepInEx 会自动生成并使用：
+##   BepInEx\config\com.kaeno.TraderScrolling.cfg
+## 本文件仅仅是示例，请不要用它覆盖你已经改过的 cfg（会丢失你的设置）。
+## 键名与旧 Kaeno 模组兼容，因此配置文件路径保持不变。
+
+[Config]
+
+## 鼠标滚轮滚动速度（每格滚动的像素量；旧 Kaeno 默认 30）
+Scroll Wheel Speed = 30
+
+## 界面A（顶部商人卡片条）是否启用横向鼠标滚轮滚动。false = 该界面完全保持原版。
+Trader Strip Scrolling = true
+
+## 界面A 滚动越界时是否弹性回弹：true = 弹性回弹（旧 Kaeno 行为），false = 硬性夹取。
+## 界面B（商人选择列表）固定为硬性夹取，不受本项影响。
+Use Elastic = false
+
+## 玩家卡/金钱面板美化（Kaeno 附带功能）
+Enable Player Card Tweaks = true
+
+[Layout]
+
+## 界面B（商人选择列表）布局模式：Wrap（一行 N 个、自动换行）/ Horizontal（全部一行、横向滚动）/ None（保持原版）
+Merchants Layout Mode = Wrap
+
+## Wrap 模式下每行显示几个商人（1..20，会自动 clamp 到实际商人数量）
+Merchants Per Row = 8
+
+## 旧模组键名兼容项：0 = 忽略；>0 时覆盖 Merchants Per Row
+Trader Columns = 0
+
+[Advanced]
+
+## 诊断用：把界面A 相关 UI 层级/尺寸/计数等写入 BepInEx\Kaeno-AdaptiveTraderUI-diag.txt
+Diagnostic Dump = false
+
+## 输出更详细的调试日志
+Debug Logging = false
