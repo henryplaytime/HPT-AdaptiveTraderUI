@@ -55,6 +55,7 @@
    ```
    BepInEx\plugins\Kaeno-TraderScrolling.dll
    BepInEx\plugins\AdjustableTraderRows.dll（或 REVIVED 版）
+   BepInEx\plugins\Kaeno-AdaptiveTraderUI.dll（如果你装过 v4.2.4 旧版）
    ```
    建议改名为 `.dll.bak` 移到别处备份。
 3. 把发布包里的 `BepInEx` 文件夹解压到 **SPT 游戏根目录**（与 `EscapeFromTarkov.exe` 同级），

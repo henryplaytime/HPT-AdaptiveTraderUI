@@ -8,6 +8,7 @@
   - 程序集 / DLL：`HPT-AdaptiveTraderUI.dll`（旧版为 `Kaeno-AdaptiveTraderUI.dll`）
   - 配置文件：`BepInEx\config\com.henryplaytime.adaptivetraderui.cfg`（旧版配置不会自动迁移）
   - 版本：`5.0.0`
+- 升级提示：如果你之前安装过旧版 v4.2.4，请同时删除/改名旧的 `BepInEx\plugins\Kaeno-AdaptiveTraderUI.dll`，否则新旧两个 DLL 会同时加载并修改同一套商人 UI。
 - 新增：启动时检测旧的 `Kaeno-TraderScrolling.dll`；若仍安装，则本次不启用任何 patch，并在日志中提示先删除旧插件，避免两个插件同时修改商人界面。
 - 优化：诊断输出改为**默认关闭**，仅在 `[Advanced] Diagnostic Dump = true` 时写入 `BepInEx\HPT-AdaptiveTraderUI-diag.txt`；正常游玩不再产生诊断文件。
 - 文档：新增 `docs/FORGE-SUBMISSION.md`（Forge 表单字段、测试清单、权限与 VirusTotal 要求）；README/构建脚本/示例配置同步更新。
