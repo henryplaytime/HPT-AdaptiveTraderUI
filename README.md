@@ -6,6 +6,15 @@
 **AdjustableTraderRows**（商人选择列表可调每行数量）两个功能合并为一个插件。
 本仓库为独立实现，与上述项目的作者无隶属关系，详见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
+## 下载 / Download
+
+- **最新发布版（推荐，普通玩家直接下载）**：
+  [GitHub Releases](https://github.com/henryplaytime/-HPT-SPT-Kaeno-AdaptiveTraderUI/releases/latest)
+- 当前版本：**v4.2.4** — [发布说明](https://github.com/henryplaytime/-HPT-SPT-Kaeno-AdaptiveTraderUI/releases/tag/v4.2.4)
+- 发布包内包含：`BepInEx/plugins/Kaeno-AdaptiveTraderUI.dll`、安装说明、LICENSE、第三方许可、CHANGELOG、
+  示例配置与 SHA256 校验值。
+- 源码用户：直接按下方「构建」一节从源码编译。
+
 > **English summary**: A BepInEx plugin for SPT 4.1.6 / EFT 1.0.x that adds horizontal mouse-wheel
 > scrolling to the top trader card strip, configurable merchants-per-row for the merchant selection
 > list (with wrap/vertical scrolling), and optional player-card visual tweaks. It is an independent
