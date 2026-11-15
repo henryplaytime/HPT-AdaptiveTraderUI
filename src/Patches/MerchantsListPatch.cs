@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Reflection;
 using EFT.UI;
 using SPT.Reflection.Patching;
 
-namespace KaenoAdaptiveTraderUI.Patches
+namespace AdaptiveTraderUI.Patches
 {
     /// <summary>
     /// 在 MerchantsList.Show(...) 执行完后处理“商人选择列表”（Traders Container，850x480 的 FlowLayoutGroup）。

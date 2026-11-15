@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Comfort.Common;
 using EFT.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>
     /// 旧 Kaeno 附带的玩家卡/金钱面板美化（全部空引用保护 + 幂等）：

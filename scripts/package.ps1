@@ -1,19 +1,19 @@
 ﻿# 打包发布版脚本 / Package a release zip
 #
-# 前置：先运行 scripts\build.ps1，或确保 artifacts\Kaeno-AdaptiveTraderUI.dll 存在。
+# 前置：先运行 scripts\build.ps1，或确保 artifacts\HPT-AdaptiveTraderUI.dll 存在。
 #
 # 用法 / Usage:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package.ps1
 #   （PowerShell 7 也可：pwsh -File scripts\package.ps1）
 #
 # 产物 / Output:
-#   artifacts\Kaeno-AdaptiveTraderUI-v<版本>.zip
-#     ├─ BepInEx\plugins\Kaeno-AdaptiveTraderUI.dll
+#   artifacts\HPT-AdaptiveTraderUI-v<版本>.zip
+#     ├─ BepInEx\plugins\HPT-AdaptiveTraderUI.dll
 #     ├─ README.md
 #     ├─ LICENSE
 #     ├─ THIRD-PARTY-NOTICES.md
 #     ├─ CHANGELOG.md
-#     ├─ config-sample\com.kaeno.TraderScrolling.cfg.sample
+#     ├─ config-sample\com.henryplaytime.adaptivetraderui.cfg.sample
 #     └─ SHA256SUMS.txt
 
 param(
@@ -25,9 +25,10 @@ if ([string]::IsNullOrWhiteSpace($Root)) {
     $Root = Split-Path -Parent $PSScriptRoot
 }
 
-$csproj = Join-Path $Root 'SPT-Kaeno-AdaptiveTraderUI.csproj'
+$csproj = Join-Path $Root 'HPT-AdaptiveTraderUI.csproj'
 $artifacts = Join-Path $Root 'artifacts'
-$dll = Join-Path $artifacts 'Kaeno-AdaptiveTraderUI.dll'
+$assemblyName = 'HPT-AdaptiveTraderUI'
+$dll = Join-Path $artifacts "$assemblyName.dll"
 
 if (-not (Test-Path -LiteralPath $dll)) {
     throw "找不到 $dll，请先运行 scripts\build.ps1"
@@ -49,7 +50,7 @@ if (Test-Path -LiteralPath $stage) {
 
 $pluginDir = Join-Path $stage 'BepInEx\plugins'
 New-Item -ItemType Directory -Force -Path $pluginDir | Out-Null
-Copy-Item -LiteralPath $dll -Destination (Join-Path $pluginDir 'Kaeno-AdaptiveTraderUI.dll') -Force
+Copy-Item -LiteralPath $dll -Destination (Join-Path $pluginDir "$assemblyName.dll") -Force
 
 $docs = @('README.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'CHANGELOG.md')
 foreach ($doc in $docs) {
@@ -59,20 +60,20 @@ foreach ($doc in $docs) {
     }
 }
 
-$sample = Join-Path $Root 'config\com.kaeno.TraderScrolling.cfg.sample'
+$sample = Join-Path $Root 'config\com.henryplaytime.adaptivetraderui.cfg.sample'
 if (Test-Path -LiteralPath $sample) {
-    Copy-Item -LiteralPath $sample -Destination (Join-Path $stage 'com.kaeno.TraderScrolling.cfg.sample') -Force
+    Copy-Item -LiteralPath $sample -Destination (Join-Path $stage 'com.henryplaytime.adaptivetraderui.cfg.sample') -Force
 }
 
 $hash = (Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
 @(
-    "SHA256 (BepInEx/plugins/Kaeno-AdaptiveTraderUI.dll) = $hash",
+    "SHA256 (BepInEx/plugins/$assemblyName.dll) = $hash",
     '',
     "# 说明：把本压缩包内的 BepInEx 文件夹解压到 SPT 游戏根目录；",
-    '# 旧的 Kaeno-TraderScrolling.dll 必须先删除或改名（本插件沿用了它的 GUID）。'
+    '# 旧的 Kaeno-TraderScrolling.dll 必须先删除或改名（本插件与它修改同一套商人界面，不能共存）。'
 ) | Set-Content -LiteralPath (Join-Path $stage 'SHA256SUMS.txt') -Encoding UTF8
 
-$zip = Join-Path $artifacts ("Kaeno-AdaptiveTraderUI-v$version.zip")
+$zip = Join-Path $artifacts ("$assemblyName-v$version.zip")
 if (Test-Path -LiteralPath $zip) {
     Remove-Item -LiteralPath $zip -Force
 }

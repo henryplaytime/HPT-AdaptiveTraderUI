@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Reflection;
 using EFT.UI;
 using SPT.Reflection.Patching;
 
-namespace KaenoAdaptiveTraderUI.Patches
+namespace AdaptiveTraderUI.Patches
 {
     /// <summary>
     /// 在 TraderScreensGroup.Show(TraderScreenController) 执行完后处理顶部商人卡片条（TraderCards）。

@@ -1,8 +1,9 @@
-## ===== Kaeno-AdaptiveTraderUI v4.2.4 示例配置 =====
+## ===== HPT-AdaptiveTraderUI v5.0.0 示例配置 =====
 ## 首次启动游戏后，BepInEx 会自动生成并使用：
-##   BepInEx\config\com.kaeno.TraderScrolling.cfg
+##   BepInEx\config\com.henryplaytime.adaptivetraderui.cfg
 ## 本文件仅仅是示例，请不要用它覆盖你已经改过的 cfg（会丢失你的设置）。
-## 键名与旧 Kaeno 模组兼容，因此配置文件路径保持不变。
+## 旧版 v4.2.4 的配置路径是 BepInEx\config\com.kaeno.TraderScrolling.cfg；
+## v5.0.0 改用独立 GUID，旧配置不会自动迁移。
 
 [Config]
 
@@ -14,7 +15,7 @@ Trader Strip Scrolling = true
 
 ## 界面A 滚动越界时是否弹性回弹：true = 弹性回弹（旧 Kaeno 行为），false = 硬性夹取。
 ## 界面B（商人选择列表）固定为硬性夹取，不受本项影响。
-Use Elastic = false
+Use Elastic = true
 
 ## 玩家卡/金钱面板美化（Kaeno 附带功能）
 Enable Player Card Tweaks = true
@@ -32,7 +33,7 @@ Trader Columns = 0
 
 [Advanced]
 
-## 诊断用：把界面A 相关 UI 层级/尺寸/计数等写入 BepInEx\Kaeno-AdaptiveTraderUI-diag.txt
+## 诊断用（默认关闭）：把界面A 的几何/滚动/计数自检写入 BepInEx\HPT-AdaptiveTraderUI-diag.txt
 Diagnostic Dump = false
 
 ## 输出更详细的调试日志

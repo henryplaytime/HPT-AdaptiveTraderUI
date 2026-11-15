@@ -7,7 +7,7 @@ using EFT.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>
     /// v4.2.3-DIAG 专用诊断代码（partial，与 TraderCardsController 同类型，不改变任何布局/滚动行为）。
@@ -16,7 +16,7 @@ namespace KaenoAdaptiveTraderUI
     ///   1) 记录界面A（顶部商人卡条）在 打开界面 / 配置变更重应用 / 滚动到最右端 / 检测到外部改动 时的完整几何状态；
     ///   2) 自动做"逻辑自检"：内容宽度 vs 卡片实际末端、滚动行程 vs 可见宽度、
     ///      计数一致性（childCount / _spawnedCards.Count / 不可见卡片）、movementType、ScrollRect 数量、锚点是否被外部改；
-    ///   3) 全部写入 BepInEx\Kaeno-AdaptiveTraderUI-diag.txt，直接发给作者定位。
+    ///   3) 全部写入 BepInEx\HPT-AdaptiveTraderUI-diag.txt，直接发给作者定位（仅在 Diagnostic Dump 开启时）。
     ///
     /// 设计约束：本文件所有代码都在 try/catch 中，绝不改变界面行为，异常只记警告。
     /// </summary>
@@ -65,6 +65,11 @@ namespace KaenoAdaptiveTraderUI
         /// <summary>ApplyCore 执行前：记录应用前的滚动状态（用于判断重应用是否把滚动位置重置了）。</summary>
         private void DiagBeforeApply()
         {
+            if (!ModConfig.DiagnosticDumpEnabled)
+            {
+                return;
+            }
+
             try
             {
                 _diagLastReason = _diagPendingReason;
@@ -83,6 +88,11 @@ namespace KaenoAdaptiveTraderUI
         /// <summary>ApplyCore 执行后：写完整快照到文件，并在 BepInEx 日志里留一行结论摘要。</summary>
         private void DiagAfterApply()
         {
+            if (!ModConfig.DiagnosticDumpEnabled)
+            {
+                return;
+            }
+
             try
             {
                 _diagApplySeq++;
@@ -125,7 +135,7 @@ namespace KaenoAdaptiveTraderUI
                 scroll.onValueChanged.AddListener(DiagOnScrollValueChanged);
                 _diagScrollEndDumped = false;
 
-                if (!_diagHintLogged)
+                if (!_diagHintLogged && ModConfig.DiagnosticDumpEnabled)
                 {
                     _diagHintLogged = true;
                     DiagFile.Hint();
@@ -139,6 +149,11 @@ namespace KaenoAdaptiveTraderUI
 
         private void DiagOnScrollValueChanged(Vector2 normalizedPosition)
         {
+            if (!ModConfig.DiagnosticDumpEnabled)
+            {
+                return;
+            }
+
             try
             {
                 if (normalizedPosition.x >= 0.999f)
@@ -166,6 +181,11 @@ namespace KaenoAdaptiveTraderUI
 
         private void Update()
         {
+            if (!ModConfig.DiagnosticDumpEnabled)
+            {
+                return;
+            }
+
             try
             {
                 DiagTick();
@@ -277,6 +297,11 @@ namespace KaenoAdaptiveTraderUI
 
         private void DiagEvent(string tag, string message)
         {
+            if (!ModConfig.DiagnosticDumpEnabled)
+            {
+                return;
+            }
+
             try
             {
                 string summary;

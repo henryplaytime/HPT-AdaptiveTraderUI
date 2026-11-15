@@ -2,7 +2,7 @@ using System;
 using BepInEx.Configuration;
 using UnityEngine;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>Merchants List（商人选择列表）布局模式。</summary>
     internal enum MerchantsLayoutMode
@@ -97,7 +97,7 @@ namespace KaenoAdaptiveTraderUI
                 "Advanced",
                 "Diagnostic Dump",
                 false,
-                "诊断用：每次打开商人界面时把相关 UI 层级、RectTransform、布局组件参数、卡片尺寸等写入 BepInEx 日志（每次最多约 400 行）。出问题时打开，然后把 BepInEx\\LogOutput.log 发给作者。");
+                "诊断用（默认关闭）：把界面A 的 UI 几何、滚动范围、卡片计数和逻辑自检写入 BepInEx\\HPT-AdaptiveTraderUI-diag.txt，用于排查商人卡条/列表显示问题。反馈问题时临时打开，把该文件发给作者即可；正常游玩不需要开启。");
 
             DebugLogging = config.Bind(
                 "Advanced",

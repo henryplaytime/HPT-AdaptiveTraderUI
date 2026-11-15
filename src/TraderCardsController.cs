@@ -5,7 +5,7 @@ using EFT.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>
     /// 界面A：TraderScreensGroup 顶栏商人卡片条（TraderCards，Kaeno 目标）。
@@ -56,7 +56,7 @@ namespace KaenoAdaptiveTraderUI
         // v4.2.4：Kaeno 回退方案专用的“可见区 viewport”（Container 的子节点，无 Graphic、无 Mask，
         // 只用于给 ScrollRect 提供正确宽度的滚动边界，避免用整条 Container(1920) 当 viewport 导致
         // 最右端最后 5~6 张卡停在 Right Person 面板后面）。
-        private const string KaenoViewportObjectName = "KaenoTraderCardsViewport";
+        private const string KaenoViewportObjectName = "AdaptiveTraderCardsViewport";
         private GameObject _kaenoViewportGo;
         private RectTransform _kaenoViewportRt;
 

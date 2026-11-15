@@ -2,10 +2,11 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>
-    /// v4.2.3-DIAG：把界面A 的诊断快照写入 BepInEx\Kaeno-AdaptiveTraderUI-diag.txt。
+    /// 诊断输出：仅在 [Advanced] Diagnostic Dump = true 时，把界面A 的诊断快照写入
+    /// BepInEx\HPT-AdaptiveTraderUI-diag.txt。默认关闭，正常游玩不会产生该文件。
     /// 独立文件比翻 BepInEx\LogOutput.log 更方便发给作者；文件只是追加文本，删除无副作用。
     /// </summary>
     internal static class DiagFile
@@ -26,11 +27,11 @@ namespace KaenoAdaptiveTraderUI
 
                 try
                 {
-                    _path = System.IO.Path.Combine(BepInEx.Paths.BepInExRootPath, "Kaeno-AdaptiveTraderUI-diag.txt");
+                    _path = System.IO.Path.Combine(BepInEx.Paths.BepInExRootPath, "HPT-AdaptiveTraderUI-diag.txt");
                 }
                 catch
                 {
-                    _path = "Kaeno-AdaptiveTraderUI-diag.txt";
+                    _path = "HPT-AdaptiveTraderUI-diag.txt";
                 }
 
                 return _path;
@@ -39,6 +40,11 @@ namespace KaenoAdaptiveTraderUI
 
         internal static void Append(string tag, string body)
         {
+            if (!ModConfig.DiagnosticDumpEnabled)
+            {
+                return;
+            }
+
             try
             {
                 lock (Gate)
@@ -48,10 +54,10 @@ namespace KaenoAdaptiveTraderUI
                     {
                         _headerWritten = true;
                         sb.AppendLine("############################################################");
-                        sb.AppendLine("# Kaeno-AdaptiveTraderUI v" + Plugin.PluginVersion + " DIAG 诊断输出");
+                        sb.AppendLine("# HPT-AdaptiveTraderUI v" + Plugin.PluginVersion + " DIAG 诊断输出");
                         sb.AppendLine("# 生成时间: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                         sb.AppendLine("# 用途: 定位界面A（顶部商人卡条）滚动/空白/缺卡问题。");
-                        sb.AppendLine("# 反馈问题时请把这个文件整个发给作者；删除本文件无任何副作用。");
+                        sb.AppendLine("# 仅在 [Advanced] Diagnostic Dump = true 时生成；删除本文件无任何副作用。");
                         sb.AppendLine("############################################################");
                         sb.AppendLine();
                     }
@@ -76,9 +82,8 @@ namespace KaenoAdaptiveTraderUI
         {
             try
             {
-                Log.Info("DIAG 构建已启用：界面A 的详细诊断会写入 " + Path
-                         + "。请打开一次商人界面、把顶部卡片条滚到最右端，然后再改一次 Use Elastic 设置；"
-                         + "结束后把该文件发给作者即可。");
+                Log.Info("诊断输出已启用：界面A 的详细诊断会写入 " + Path
+                         + "。复现问题后把该文件发给作者即可。");
             }
             catch
             {

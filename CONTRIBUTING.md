@@ -1,14 +1,14 @@
 # 贡献指南 / Contributing
 
-感谢你愿意改进 Kaeno-AdaptiveTraderUI。
+感谢你愿意改进 HPT-AdaptiveTraderUI。
 
 ## 反馈问题
 
-1. 先确认游戏中只安装了本插件（旧的 `Kaeno-TraderScrolling.dll` 必须删除或改名，否则两个插件 GUID 相同会冲突）。
-2. 打开 `BepInEx\config\com.kaeno.TraderScrolling.cfg`，把 `[Advanced] Diagnostic Dump = true`。
-3. 复现问题后，把 `BepInEx\LogOutput.log` 和 `BepInEx\Kaeno-AdaptiveTraderUI-diag.txt`（如果存在）一起附在 Issue 里，并写明：
+1. 先确认游戏中只安装了本插件（旧的 `Kaeno-TraderScrolling.dll` 必须删除或改名；本插件启动时会检测并拒绝与旧插件同时启用）。
+2. 打开 `BepInEx\config\com.henryplaytime.adaptivetraderui.cfg`，把 `[Advanced] Diagnostic Dump = true`。
+3. 复现问题后，把 `BepInEx\LogOutput.log` 和 `BepInEx\HPT-AdaptiveTraderUI-diag.txt` 一起附在 Issue 里，并写明：
    - SPT / EFT 版本（例如 SPT 4.1.6 / EFT 1.0.x）
-   - 本插件版本
+   - 本插件版本（例如 5.0.0）
    - 商人数量、商人选择列表每行设置
    - 复现步骤与预期/实际行为
 
@@ -16,7 +16,7 @@
 
 - 本仓库采用 **MIT** 许可证，提交 PR 即表示你同意以 MIT 许可证发布你的贡献。
 - 不要提交任何游戏文件或反编译产物：`EscapeFromTarkov_Data`、`Assembly-CSharp.dll`、`BepInEx` 程序集、`Spt` 服务端文件等一律不要放进仓库。
-- 不要提交 `bin/`、`obj/`、`dist/`、`*.zip`；构建产物由 CI/Release 生成。
+- 不要提交 `bin/`、`obj/`、`artifacts/`、`*.zip`；构建产物由脚本/Release 生成。
 - 代码风格：
   - C#（netstandard2.1，尽量兼容 C# 7.3+ 语法），4 空格缩进；
   - 所有对游戏对象的访问必须有 `null` 判断与 `try/catch`，保证插件失败时游戏仍可正常游玩；
@@ -39,5 +39,5 @@ $env:SPT_GAME_DIR = "D:\SPT\Escape From Tarkov_4.1.6"
 dotnet build -c Release
 ```
 
-启动游戏验证后，建议把 `[Advanced] Diagnostic Dump` 打开一次并检查 `BepInEx\Kaeno-AdaptiveTraderUI-diag.txt`
-里的 `CHECK1`~`CHECK7` 是否均为 PASS。
+启动游戏验证后，建议把 `[Advanced] Diagnostic Dump` 打开一次并检查 `BepInEx\HPT-AdaptiveTraderUI-diag.txt`
+里的 `CHECK1`~`CHECK7` 是否均为 PASS。发布到 The Forge 前请先阅读 `docs/FORGE-SUBMISSION.md`。

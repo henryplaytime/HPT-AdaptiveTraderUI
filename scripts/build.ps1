@@ -6,7 +6,7 @@
 #   $env:SPT_GAME_DIR = "D:\SPT\Escape From Tarkov_4.1.6"; powershell -File scripts\build.ps1
 #
 # 产物 / Output:
-#   artifacts\Kaeno-AdaptiveTraderUI.dll
+#   artifacts\HPT-AdaptiveTraderUI.dll
 #   （构建中间产物仍在 bin\ 与 obj\，已加入 .gitignore）
 
 param(
@@ -17,8 +17,9 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$csproj = Join-Path $root 'SPT-Kaeno-AdaptiveTraderUI.csproj'
+$csproj = Join-Path $root 'HPT-AdaptiveTraderUI.csproj'
 $artifacts = Join-Path $root 'artifacts'
+$assemblyName = 'HPT-AdaptiveTraderUI'
 
 if (-not (Test-Path -LiteralPath $csproj)) {
     throw "找不到 csproj: $csproj"
@@ -36,7 +37,7 @@ if (-not (Test-Path -LiteralPath $GameDir)) {
     throw "GameDir 不存在: $GameDir"
 }
 
-Write-Host '== Kaeno-AdaptiveTraderUI build ==' -ForegroundColor Cyan
+Write-Host '== HPT-AdaptiveTraderUI build ==' -ForegroundColor Cyan
 Write-Host "GameDir = $GameDir"
 Write-Host "csproj  = $csproj"
 
@@ -46,20 +47,20 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $candidates = @(
-    (Join-Path $root "bin\$Configuration\Kaeno-AdaptiveTraderUI.dll"),
-    (Join-Path $root "bin\$Configuration\netstandard2.1\Kaeno-AdaptiveTraderUI.dll")
+    (Join-Path $root "bin\$Configuration\$assemblyName.dll"),
+    (Join-Path $root "bin\$Configuration\netstandard2.1\$assemblyName.dll")
 )
 $dll = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 if (-not $dll) {
-    $dll = Get-ChildItem -Path (Join-Path $root 'bin') -Recurse -Filter 'Kaeno-AdaptiveTraderUI.dll' -ErrorAction SilentlyContinue |
+    $dll = Get-ChildItem -Path (Join-Path $root 'bin') -Recurse -Filter "$assemblyName.dll" -ErrorAction SilentlyContinue |
         Select-Object -First 1 -ExpandProperty FullName
 }
 if (-not $dll) {
-    throw '构建成功但找不到 Kaeno-AdaptiveTraderUI.dll'
+    throw "构建成功但找不到 $assemblyName.dll"
 }
 
 New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
-$outDll = Join-Path $artifacts 'Kaeno-AdaptiveTraderUI.dll'
+$outDll = Join-Path $artifacts "$assemblyName.dll"
 Copy-Item -LiteralPath $dll -Destination $outDll -Force
 
 Write-Host "OK: $outDll" -ForegroundColor Green

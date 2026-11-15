@@ -26,6 +26,8 @@ lib/
 _analysis/
 _diag/
 *.log
+HPT-AdaptiveTraderUI-diag.txt
+Kaeno-AdaptiveTraderUI-diag.txt
 
 # ---- OS ----
 .DS_Store

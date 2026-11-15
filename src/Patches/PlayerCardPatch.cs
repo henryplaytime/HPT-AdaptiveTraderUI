@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Reflection;
 using EFT.UI;
 using SPT.Reflection.Patching;
 
-namespace KaenoAdaptiveTraderUI.Patches
+namespace AdaptiveTraderUI.Patches
 {
     /// <summary>
     /// 旧 Kaeno 附带的玩家卡/金钱面板美化：每次金钱面板刷新时尝试应用（幂等，重复调用不会累加偏移）。

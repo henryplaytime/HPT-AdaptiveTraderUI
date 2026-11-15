@@ -4,7 +4,7 @@ using EFT.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>
     /// 诊断 dump：仅在 [Advanced] Diagnostic Dump = true 时输出，方便用户把 BepInEx\LogOutput.log 发给作者定位问题。

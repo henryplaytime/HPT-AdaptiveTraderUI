@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Reflection;
 using EFT.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>
     /// 界面B：TradingScreen 的 Merchants List（商人选择列表）——旧 AdjustableTraderRows 真正生效的界面。

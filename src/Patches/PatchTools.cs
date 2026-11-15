@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Reflection;
 using HarmonyLib;
 
-namespace KaenoAdaptiveTraderUI.Patches
+namespace AdaptiveTraderUI.Patches
 {
     internal static class PatchTools
     {

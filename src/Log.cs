@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using BepInEx.Logging;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>
     /// 统一日志出口。所有日志带固定前缀，方便用户/作者在 BepInEx\LogOutput.log 里搜索。
@@ -9,7 +9,7 @@ namespace KaenoAdaptiveTraderUI
     /// </summary>
     internal static class Log
     {
-        internal const string Prefix = "[Kaeno-AdaptiveTraderUI]";
+        internal const string Prefix = "[HPT-AdaptiveTraderUI]";
 
         private static ManualLogSource _source;
 

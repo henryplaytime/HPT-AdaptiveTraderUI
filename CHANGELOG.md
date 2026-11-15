@@ -1,5 +1,18 @@
 # 更新记录 / Changelog
 
+## v5.0.0（2026-11-15）Forge 发布准备版
+
+- **Breaking / 身份变更**：为满足 Forge 的 GUID/命名规则，插件身份改为：
+  - GUID：`com.henryplaytime.adaptivetraderui`（旧版为 `com.kaeno.TraderScrolling`）
+  - BepInPlugin Mod Name：`henryplaytime-AdaptiveTraderUI`
+  - 程序集 / DLL：`HPT-AdaptiveTraderUI.dll`（旧版为 `Kaeno-AdaptiveTraderUI.dll`）
+  - 配置文件：`BepInEx\config\com.henryplaytime.adaptivetraderui.cfg`（旧版配置不会自动迁移）
+  - 版本：`5.0.0`
+- 新增：启动时检测旧的 `Kaeno-TraderScrolling.dll`；若仍安装，则本次不启用任何 patch，并在日志中提示先删除旧插件，避免两个插件同时修改商人界面。
+- 优化：诊断输出改为**默认关闭**，仅在 `[Advanced] Diagnostic Dump = true` 时写入 `BepInEx\HPT-AdaptiveTraderUI-diag.txt`；正常游玩不再产生诊断文件。
+- 文档：新增 `docs/FORGE-SUBMISSION.md`（Forge 表单字段、测试清单、权限与 VirusTotal 要求）；README/构建脚本/示例配置同步更新。
+- 功能与 v4.2.4 相同（界面A 滚动修复、界面B 可调行数、玩家卡美化、失败安全）。
+
 ## v4.2.4（2026-11-07）修复版
 
 - 修复界面A（顶部商人卡片条）滑到最右端仍缺 1~2 个（实际约 5~6 个卡位）商人的问题。

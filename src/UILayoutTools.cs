@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace KaenoAdaptiveTraderUI
+namespace AdaptiveTraderUI
 {
     /// <summary>RectTransform 状态快照，用于把容器恢复成游戏原本的样子（Layout Mode=None 或不需要滚动时）。</summary>
     internal struct RectTransformSnapshot
