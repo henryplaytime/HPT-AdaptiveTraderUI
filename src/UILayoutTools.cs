@@ -139,27 +139,6 @@ namespace AdaptiveTraderUI
             return null;
         }
 
-        internal static Transform FindAncestor(Transform start, string name, int maxLevels = 12)
-        {
-            if (start == null)
-            {
-                return null;
-            }
-
-            var current = start;
-            for (var i = 0; i < maxLevels && current != null; i++)
-            {
-                if (string.Equals(current.name, name, StringComparison.Ordinal))
-                {
-                    return current;
-                }
-
-                current = current.parent;
-            }
-
-            return null;
-        }
-
         internal static string GetPath(Transform transform)
         {
             if (transform == null)
@@ -247,17 +226,6 @@ namespace AdaptiveTraderUI
             }
 
             return null;
-        }
-
-        internal static bool IsFlowLikeLayout(LayoutGroup group)
-        {
-            if (group == null)
-            {
-                return false;
-            }
-
-            var typeName = group.GetType().Name;
-            return typeName.IndexOf("Flow", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         // ---------------------------------------------------------------- 测量
@@ -556,23 +524,6 @@ namespace AdaptiveTraderUI
             return null;
         }
 
-        internal static int CountChildren(Transform content)
-        {
-            if (content == null)
-            {
-                return 0;
-            }
-
-            try
-            {
-                return content.childCount;
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
         // ---------------------------------------------------------------- 滚动结构
 
         internal static ScrollRect FindScrollInAncestors(RectTransform content)
@@ -698,17 +649,6 @@ namespace AdaptiveTraderUI
             {
                 return "<error>";
             }
-        }
-
-        internal static bool IsAnchoredToSinglePoint(RectTransform rect)
-        {
-            if (rect == null)
-            {
-                return false;
-            }
-
-            return Mathf.Approximately(rect.anchorMin.x, rect.anchorMax.x)
-                   && Mathf.Approximately(rect.anchorMin.y, rect.anchorMax.y);
         }
 
         // ---------------------------------------------------------------- 世界坐标 / 参考像素

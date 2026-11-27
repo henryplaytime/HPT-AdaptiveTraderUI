@@ -7,7 +7,7 @@
 1. 先确认游戏中只安装了本插件（旧的 `Kaeno-TraderScrolling.dll` 必须删除或改名；本插件启动时会检测并拒绝与旧插件同时启用）。
 2. 打开 `BepInEx\config\com.henryplaytime.adaptivetraderui.cfg`，把 `[Advanced] Diagnostic Dump = true`。
 3. 复现问题后，把 `BepInEx\LogOutput.log` 和 `BepInEx\HPT-AdaptiveTraderUI-diag.txt` 一起附在 Issue 里，并写明：
-   - SPT / EFT 版本（例如 SPT 4.1.6 / EFT 1.0.x）
+   - SPT / EFT 版本（例如 SPT 4.1.6 / EFT 0.16.9.5.40743）
    - 本插件版本（例如 5.0.0）
    - 商人数量、商人选择列表每行设置
    - 复现步骤与预期/实际行为

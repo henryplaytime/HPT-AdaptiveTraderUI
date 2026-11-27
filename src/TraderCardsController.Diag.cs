@@ -232,14 +232,20 @@ namespace AdaptiveTraderUI
 
                 if (_scroll != null)
                 {
-                    if (_scroll.movementType != ScrollRect.MovementType.Clamped)
+                    // v1.1.0：期望值随 Use Elastic 推导（v4.2.4 起界面A 的 movementType 由该配置决定，
+                    // 默认 true = Elastic）。旧实现写死 Clamped，默认配置下会误报“有外部代码在改它”。
+                    var expectedMovementTick = ModConfig.Elastic
+                        ? ScrollRect.MovementType.Elastic
+                        : ScrollRect.MovementType.Clamped;
+                    if (_scroll.movementType != expectedMovementTick)
                     {
                         if (!_diagMovementLogged)
                         {
                             _diagMovementLogged = true;
                             DiagEvent("external-movement",
                                 "ScrollRect.movementType 当前=" + _scroll.movementType
-                                + "（本模组回退方案固定写 Clamped，说明有外部代码在改它；这会产生弹性回弹/越界空白）");
+                                + "（当前配置 UseElastic=" + ModConfig.Elastic + " 期望 " + expectedMovementTick
+                                + "，与当前配置不一致，说明有外部代码在改它）");
                         }
                     }
                     else
@@ -378,7 +384,7 @@ namespace AdaptiveTraderUI
                           + " diagBuild=true（诊断构建：行为与 v4.2.2 完全相同，仅增加记录）");
             sb.AppendLine("[config] TraderStripScrolling=" + BoolValue(ModConfig.TraderStripScrolling)
                           + " UseElastic=" + BoolValue(ModConfig.UseElastic)
-                          + "  [重要] 界面A 回退方案里 movementType 被写死为 Clamped，UseElastic 对界面A不生效"
+                          + " 界面A 的 movementType 由 Use Elastic 决定（true=Elastic / false=Clamped）"
                           + " WheelSpeed=" + ModConfig.WheelSpeed.ToString("0.#")
                           + " DiagnosticDump(配置)=" + BoolValue(ModConfig.DiagnosticDump)
                           + " DebugLogging=" + BoolValue(ModConfig.DebugLogging)
@@ -891,16 +897,22 @@ namespace AdaptiveTraderUI
                        + " spawnedCards=" + _diagCardsSnapshotSpawned
                        + " spawned异常=" + _diagCardsSnapshotSpawnedBad);
 
-            // 关键自检 4：movementType
+            // 关键自检 4：movementType（v1.1.0：期望值随 Use Elastic 推导；界面A 自 v4.2.4 起该项真实生效）
+            var expectedMovement = ModConfig.Elastic
+                ? ScrollRect.MovementType.Elastic
+                : ScrollRect.MovementType.Clamped;
             var movement = _scroll == null ? "无ScrollRect" : _scroll.movementType.ToString();
             var movementOk = _scroll == null
                 ? !scrollMode
-                : _scroll.movementType == ScrollRect.MovementType.Clamped;
+                : _scroll.movementType == expectedMovement;
             checks.Add("CHECK4 movementType " + (movementOk ? "PASS" : "FAIL")
                        + "：" + movement
                        + (_scroll == null
                            ? (scrollMode ? "（应为滚动模式但没有 ScrollRect！）" : "（未启用滚动，不适用）")
-                           : "（期望 Clamped；UseElastic 配置在当前回退方案里不生效）"));
+                           : (movementOk
+                               ? "（与当前配置一致；期望 " + expectedMovement + "，UseElastic=" + ModConfig.Elastic + "）"
+                               : "（与当前配置不一致；期望 " + expectedMovement + "，UseElastic=" + ModConfig.Elastic
+                                 + "，说明有外部代码在改它）")));
 
             // 关键自检 5：内容锚点是否被外部改
             var anchorsOk = _snapshotValid
@@ -959,7 +971,7 @@ namespace AdaptiveTraderUI
             sb.AppendLine("  - CHECK1 FAIL：滚到最右端时最后 " + travelDeficitCards + " 张卡仍藏在 Right Person 面板（x≥" + visibleRight.ToString("0.##") + "）后面，永远滑不出来 → 对应\"滑到底还缺商人\"。");
             sb.AppendLine("  - CHECK2 FAIL：内容右侧比卡片实际末端多 " + blankTail.ToString("0.##") + "px（≈" + blankTailSlots.ToString("0.##") + " 张卡位），滚到底会看到一大段空白 → 对应\"拉出一大段空白\"。");
             sb.AppendLine("  - CHECK3 FAIL：内容宽度按 CountCards() 的较大值计算，但实际参与排版的是 active 子节点数；差值会变成白卡位。");
-            sb.AppendLine("  - CHECK4 FAIL：movementType 不是 Clamped，说明 UseElastic/其它模组把它改成了 Elastic；Elastic 在滚轮越界时不会立刻夹取，会先拉出一段空白再回弹。");
+            sb.AppendLine("  - CHECK4 FAIL：movementType 与当前配置不一致（UseElastic=" + ModConfig.Elastic + " → 期望 " + expectedMovement + "），说明有外部代码在改它；判定只看“是否与当前配置一致”，Elastic 的越界回弹属当前配置的正常行为。");
             sb.AppendLine("  - CHECK5/CHECK6 FAIL：TraderCards 的锚点/ScrollRect 被其它模组改过（本模组只在 打开界面/配置变更 时重新写回）。");
             sb.AppendLine("  - CHECK7 FAIL：ApplyCore 采用的可见宽度与静止几何重新计算的不一致（Right Person/Container 位置可能被其它模组改动，或测量时机不对）。");
         }

@@ -11,7 +11,7 @@ namespace AdaptiveTraderUI
     /// Forge 要求：
     ///   - GUID 使用本项目自己的反向域名：com.henryplaytime.adaptivetraderui
     ///   - [BepInPlugin] 名称必须是 "用户名-ModName"：henryplaytime-AdaptiveTraderUI
-    ///   - 版本号必须与 csproj / 发布包 / Forge 页面一致：5.0.0
+    ///   - 版本号必须与 csproj / 发布包 / Forge 页面一致：1.1.0
     ///
     /// 配置文件名由 GUID 派生：BepInEx\config\com.henryplaytime.adaptivetraderui.cfg
     ///
@@ -24,15 +24,12 @@ namespace AdaptiveTraderUI
     {
         public const string PluginGuid = "com.henryplaytime.adaptivetraderui";
         public const string PluginName = "henryplaytime-AdaptiveTraderUI";
-        public const string PluginVersion = "5.0.0";
+        public const string PluginVersion = "1.1.0";
 
         private const string LegacyKaenoPluginFileName = "Kaeno-TraderScrolling.dll";
 
-        internal static Plugin Instance { get; private set; }
-
         private void Awake()
         {
-            Instance = this;
             Log.Init(Logger);
             Log.Info("正在加载 v" + PluginVersion + "（GUID=" + PluginGuid + "）");
 
@@ -107,11 +104,6 @@ namespace AdaptiveTraderUI
                 Log.Error("启用 patch 失败（该功能将不可用，其它功能不受影响）: " + description);
                 Log.Exception("patch 启用失败", ex);
             }
-        }
-
-        private void OnDestroy()
-        {
-            Instance = null;
         }
     }
 }

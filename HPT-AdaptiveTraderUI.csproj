@@ -2,12 +2,12 @@
 
   <!--
     HPT-AdaptiveTraderUI
-    SPT 4.1.6 / EFT 1.0.x 商人界面增强 BepInEx 插件（界面A 卡片条横向滚动 + 界面B 可调行数 + 玩家卡美化）。
+    SPT 4.1.6 / EFT 0.16.9.5.40743 商人界面增强 BepInEx 插件（界面A 卡片条横向滚动 + 界面B 可调行数 + 玩家卡美化）。
 
     Forge 身份信息（发布时必须保持一致）：
       GUID:      com.henryplaytime.adaptivetraderui
       Mod Name:  henryplaytime-AdaptiveTraderUI
-      Version:   5.0.0
+      Version:   1.1.0
 
     构建前必须指定 SPT 安装目录（该目录下应有 BepInEx\ 和 EscapeFromTarkov_Data\）：
       dotnet build -c Release -p:GameDir="D:\你的SPT目录\Escape From Tarkov_4.1.6"
@@ -21,9 +21,9 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>HPT-AdaptiveTraderUI</AssemblyName>
     <RootNamespace>AdaptiveTraderUI</RootNamespace>
-    <Version>5.0.0</Version>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.0.0.0</FileVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>

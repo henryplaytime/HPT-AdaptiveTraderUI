@@ -17,12 +17,28 @@ namespace AdaptiveTraderUI
         Horizontal = 2,
     }
 
+    /// <summary>v1.1.0：界面A 卡条匹配选中商人时的对齐方式。</summary>
+    internal enum AlignedSide
+    {
+        /// <summary>靠左：卡片左边缘对齐可见区左边缘。</summary>
+        Start = 0,
+
+        /// <summary>居中：卡片中心对齐可见区中心。</summary>
+        Center = 1,
+
+        /// <summary>靠右：卡片右边缘对齐可见区右边缘。</summary>
+        End = 2,
+    }
+
     internal static class ModConfig
     {
         // ---- [Config] ----
         internal static ConfigEntry<float> ScrollWheelSpeed;
         internal static ConfigEntry<bool> TraderStripScrolling;
         internal static ConfigEntry<bool> UseElastic;
+        internal static ConfigEntry<bool> RememberStripPositionEntry;
+        internal static ConfigEntry<bool> MatchSelectedTraderEntry;
+        internal static ConfigEntry<string> SelectedTraderAlignmentEntry;
         internal static ConfigEntry<bool> EnablePlayerCardTweaks;
 
         // ---- [Layout] ----
@@ -42,6 +58,9 @@ namespace AdaptiveTraderUI
 
         /// <summary>v4.2.3-DIAG：最后一次被修改的配置项名称，供诊断文件记录。</summary>
         internal static string LastChangedSetting = "<none>";
+
+        /// <summary>v1.1.0：对齐方式无法识别时只警告一次（改设置后重置）。</summary>
+        private static bool _alignmentWarned;
 
         internal static void Bind(ConfigFile config)
         {
@@ -64,6 +83,24 @@ namespace AdaptiveTraderUI
                 "Use Elastic",
                 true,
                 "界面A（顶部商人卡条）滚动越界时是否弹性回弹：true = 弹性回弹（旧 Kaeno 行为），false = 硬性夹取。界面B（商人选择列表）固定使用硬性夹取，不受此项影响。v4.2.4 起该项对界面A 重新生效。");
+
+            RememberStripPositionEntry = config.Bind(
+                "Config",
+                "Remember Strip Position",
+                true,
+                "界面A（顶部商人卡条）是否记住你的滚动位置：true = 重新进入商人界面时停在你自己上次滚到的位置；false = 每次进入都从第一张卡开始（等于 v5.0.0 的老行为）。位置只记在本次游戏进程内存里，退出游戏即清空，不写盘。");
+
+            MatchSelectedTraderEntry = config.Bind(
+                "Config",
+                "Match Selected Trader",
+                true,
+                "在商人选择列表里选中另一个商人后，界面A（顶部商人卡条）是否自动滚到该商人的卡片处（对齐方式见 Selected Trader Alignment）。false = 不做匹配，只恢复上次的滚动位置；关掉后配合 Remember Strip Position=false 就是 v5.0.0 的老行为。");
+
+            SelectedTraderAlignmentEntry = config.Bind(
+                "Config",
+                "Selected Trader Alignment",
+                "Center",
+                "界面A 卡条匹配选中商人时的对齐方式：Start（靠左）/ Center（居中，默认）/ End（靠右）。也接受 Left / Middle / Right 与 靠左 / 居中 / 靠右，大小写不敏感；无法识别时回退 Center 并警告一次。仅在 Match Selected Trader = true 时生效。");
 
             EnablePlayerCardTweaks = config.Bind(
                 "Config",
@@ -110,6 +147,14 @@ namespace AdaptiveTraderUI
             TraderColumnsLegacyAlias.SettingChanged += (_, __) => RaiseLayout("Trader Columns");
             TraderStripScrolling.SettingChanged += (_, __) => RaiseLayout("Trader Strip Scrolling");
             UseElastic.SettingChanged += (_, __) => RaiseLayout("Use Elastic");
+            RememberStripPositionEntry.SettingChanged += (_, __) => RaiseLayout("Remember Strip Position");
+            MatchSelectedTraderEntry.SettingChanged += (_, __) => RaiseLayout("Match Selected Trader");
+            SelectedTraderAlignmentEntry.SettingChanged += (_, __) =>
+            {
+                // 用户改了值，允许下次无法识别时再警告一次
+                _alignmentWarned = false;
+                RaiseLayout("Selected Trader Alignment");
+            };
             ScrollWheelSpeed.SettingChanged += (_, __) =>
             {
                 LastChangedSetting = "Scroll Wheel Speed";
@@ -119,6 +164,9 @@ namespace AdaptiveTraderUI
             Log.Info("配置已加载: merchantsMode=" + MerchantsMode
                      + " perRow=" + PerRow
                      + " traderStripScrolling=" + TraderStripScrollingEnabled
+                     + " rememberStripPosition=" + RememberStripPositionEnabled
+                     + " matchSelectedTrader=" + MatchSelectedTraderEnabled
+                     + " alignment=" + SelectedTraderAlignment
                      + " wheelSpeed=" + WheelSpeed
                      + " playerCardTweaks=" + PlayerCardTweaksEnabled
                      + " diagnosticDump=" + DiagnosticDumpEnabled);
@@ -140,6 +188,12 @@ namespace AdaptiveTraderUI
         internal static bool Elastic => UseElastic == null || UseElastic.Value;
         internal static bool DiagnosticDumpEnabled => DiagnosticDump != null && DiagnosticDump.Value;
         internal static bool PlayerCardTweaksEnabled => EnablePlayerCardTweaks == null || EnablePlayerCardTweaks.Value;
+
+        /// <summary>v1.1.0：是否记忆界面A 卡条位置。</summary>
+        internal static bool RememberStripPositionEnabled => RememberStripPositionEntry == null || RememberStripPositionEntry.Value;
+
+        /// <summary>v1.1.0：选中商人变化时是否把卡片滚入视野。</summary>
+        internal static bool MatchSelectedTraderEnabled => MatchSelectedTraderEntry == null || MatchSelectedTraderEntry.Value;
 
         internal static float WheelSpeed
         {
@@ -216,6 +270,53 @@ namespace AdaptiveTraderUI
                     }
 
                     return MerchantsLayoutMode.Wrap;
+            }
+        }
+
+        /// <summary>v1.1.0：当前对齐方式（无法识别时回退 Center）。</summary>
+        internal static AlignedSide SelectedTraderAlignment
+        {
+            get
+            {
+                var raw = SelectedTraderAlignmentEntry == null ? "Center" : SelectedTraderAlignmentEntry.Value;
+                return ParseAlignedSide(raw, true);
+            }
+        }
+
+        internal static AlignedSide ParseAlignedSide(string raw, bool logWarning)
+        {
+            if (string.IsNullOrEmpty(raw))
+            {
+                return AlignedSide.Center;
+            }
+
+            switch (raw.Trim().ToLowerInvariant())
+            {
+                case "start":
+                case "left":
+                case "靠左":
+                case "0":
+                    return AlignedSide.Start;
+                case "center":
+                case "centre":
+                case "middle":
+                case "居中":
+                case "1":
+                    return AlignedSide.Center;
+                case "end":
+                case "right":
+                case "靠右":
+                case "2":
+                    return AlignedSide.End;
+                default:
+                    if (logWarning && !_alignmentWarned)
+                    {
+                        _alignmentWarned = true;
+                        Log.Warn("无法识别的 Selected Trader Alignment 值 \"" + raw
+                                 + "\"，已回退为 Center。可用值：Start / Center / End（也可写 Left / Middle / Right、靠左 / 居中 / 靠右）。");
+                    }
+
+                    return AlignedSide.Center;
             }
         }
     }

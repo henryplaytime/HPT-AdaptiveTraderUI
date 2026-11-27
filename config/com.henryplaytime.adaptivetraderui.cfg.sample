@@ -1,4 +1,4 @@
-## ===== HPT-AdaptiveTraderUI v5.0.0 示例配置 =====
+## ===== HPT-AdaptiveTraderUI v1.1.0 示例配置 =====
 ## 首次启动游戏后，BepInEx 会自动生成并使用：
 ##   BepInEx\config\com.henryplaytime.adaptivetraderui.cfg
 ## 本文件仅仅是示例，请不要用它覆盖你已经改过的 cfg（会丢失你的设置）。
@@ -16,6 +16,18 @@ Trader Strip Scrolling = true
 ## 界面A 滚动越界时是否弹性回弹：true = 弹性回弹（旧 Kaeno 行为），false = 硬性夹取。
 ## 界面B（商人选择列表）固定为硬性夹取，不受本项影响。
 Use Elastic = true
+
+## 界面A 是否记住卡条滚动位置：true = 重新进入商人界面时停在你自己上次滚到的位置；
+## false = 每次进入都从第一张卡开始（等于 v5.0.0 的老行为）。仅本次游戏进程内有效，不写盘。
+Remember Strip Position = true
+
+## 选中另一个商人后，界面A 卡条是否自动滚到该商人的卡片处（对齐方式见下一项）。
+## false = 不做匹配，只恢复上次的滚动位置。
+Match Selected Trader = true
+
+## 匹配时的对齐方式：Start（靠左）/ Center（居中，默认）/ End（靠右）。
+## 也接受 Left / Middle / Right 与 靠左 / 居中 / 靠右；无法识别时回退 Center 并警告一次。
+Selected Trader Alignment = Center
 
 ## 玩家卡/金钱面板美化（Kaeno 附带功能）
 Enable Player Card Tweaks = true

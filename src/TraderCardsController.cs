@@ -30,7 +30,6 @@ namespace AdaptiveTraderUI
     {
         private const string ViewportObjectName = "KaenoAdaptiveViewport";
         private const float SideMargins = 16f;      // 左右各 8px，来自实测公式
-        private const float DefaultRightReserved = 650f; // Right Person 宽度 fallback
         private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         private static bool _reflectionResolved;
@@ -48,7 +47,6 @@ namespace AdaptiveTraderUI
         private Vector2 _baselineSize;
         private float _leftInset = 8f;
 
-        private GameObject _viewportGo;
         private RectTransform _viewportRt;
         private ScrollRect _scroll;
         private bool _kaenoFallback;
@@ -69,12 +67,22 @@ namespace AdaptiveTraderUI
         private RectTransform _rightPerson;
         private bool _rightPersonResolved;
 
-        // v4.2.4：内容宽度/可见宽度诊断量（也用于日志）
-        private int _lastActiveCards;
-        private float _lastFormulaWidth;
-
         // v4.2.4：配置变更重应用时保留滚动位置（避免“改设置→卡条跳回开头”）
         private float _preservedNormalized = -1f;
+
+        // v1.1.0：卡条位置记忆 + 选中商人匹配。
+        // 记忆必须是静态的：控制器挂在 TraderCards 上，界面重开时组件实例可能被重建，
+        // 只有静态字段才能跨 Show 存活（仅进程内有效，不写盘）。
+        private static bool _hasMemory;
+        private static float _memoryNormalized;
+        private static string _lastSelectedId;
+
+        // v1.1.0：应用目标位置时抑制 onValueChanged 回写，避免把自己的写当成“用户手动滚动”
+        private bool _applyingScroll;
+        private bool _scrollHookAttached;
+
+        // v1.1.0：本次应用的触发原因（RequestApply 记录，ApplyNow 据此决定是否做位置决策）
+        private string _applyReason = "Show";
 
         // ------------------------------------------------------------------ 静态入口
 
@@ -313,13 +321,7 @@ namespace AdaptiveTraderUI
         {
             try
             {
-                if (_viewportGo != null)
-                {
-                    UnityEngine.Object.Destroy(_viewportGo);
-                    _viewportGo = null;
-                    _viewportRt = null;
-                    _scroll = null;
-                }
+                UnhookScrollChanged(); // v1.1.0：控制器销毁时摘掉记忆监听
 
                 // v4.2.4：销毁滚动边界 viewport
                 if (_kaenoViewportGo != null)
@@ -368,6 +370,7 @@ namespace AdaptiveTraderUI
         private void RequestApply(string reason)
         {
             DiagNoteRequest(reason); // v4.2.3-DIAG：记录本次应用是谁触发的（Show / 配置变更 / ...）
+            _applyReason = string.IsNullOrEmpty(reason) ? "apply" : reason; // v1.1.0：位置决策要用的触发原因
 
             // v4.2.4：配置变更重应用时记住当前滚动位置，应用完再恢复，避免“改设置→卡条跳回开头”。
             // 重新打开界面（Show）不保留，保持原版从第一张卡开始的行为。
@@ -430,7 +433,9 @@ namespace AdaptiveTraderUI
                 Log.Exception("界面A 布局应用", ex);
             }
 
-            ApplyPreservedScrollPosition(); // v4.2.4：配置变更重应用后恢复滚动位置（不跳回开头）
+            // v1.1.0：把「配置变更后恢复位置」扩展成「应用末尾决定卡条位置」
+            //（config-change 分支内部仍是 v5.0.0 的 ApplyPreservedScrollPosition 行为）
+            ApplyScrollIntent(_applyReason);
 
             DiagAfterApply(); // v4.2.3-DIAG：把完整几何/自检结论写入诊断文件
 
@@ -514,8 +519,6 @@ namespace AdaptiveTraderUI
             _diagPadding = padding;
             _diagTotalWidth = totalWidth;
             _diagUsableWidth = usableWidth;
-            _lastActiveCards = activeChildren;
-            _lastFormulaWidth = formulaWidth;
 
             if (usableWidth >= totalWidth - 1f)
             {
@@ -715,137 +718,6 @@ namespace AdaptiveTraderUI
             }
         }
 
-        /// <summary>主方案：新建 viewport 节点（裁剪掉 Right Person 占用的右侧区域），TraderCards 移入并加滚动。</summary>
-        private bool EnsureViewport(float totalWidth, Vector2 card)
-        {
-            if (_kaenoFallback)
-            {
-                return false;
-            }
-
-            if (_viewportGo != null)
-            {
-                ConfigureScrollForViewport(totalWidth, card);
-                return true;
-            }
-
-            if (!_snapshotValid || _contentSnapshot.Parent == null)
-            {
-                return false;
-            }
-
-            try
-            {
-                var wrapper = new GameObject(ViewportObjectName, typeof(RectTransform));
-                var rect = (RectTransform)wrapper.transform;
-                rect.SetParent(_contentSnapshot.Parent, false);
-
-                rect.anchorMin = Vector2.zero;
-                rect.anchorMax = Vector2.one;
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.offsetMin = Vector2.zero;
-                rect.offsetMax = new Vector2(GetRightMargin(), 0f);
-
-                if (rect.GetComponent<RectMask2D>() == null && rect.GetComponent<Mask>() == null)
-                {
-                    wrapper.AddComponent<RectMask2D>();
-                }
-
-                var scroll = wrapper.AddComponent<ScrollRect>();
-                scroll.viewport = rect;
-                scroll.content = _content;
-                scroll.horizontal = true;
-                scroll.vertical = false;
-                scroll.inertia = true;
-                scroll.movementType = ModConfig.Elastic ? ScrollRect.MovementType.Elastic : ScrollRect.MovementType.Clamped;
-                scroll.scrollSensitivity = ModConfig.WheelSpeed;
-
-                _viewportGo = wrapper;
-                _viewportRt = rect;
-                _scroll = scroll;
-
-                ConfigureScrollForViewport(totalWidth, card);
-                Log.Debug("界面A 已创建 viewport=" + ViewportObjectName + " rightMargin=" + GetRightMargin());
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log.Exception("界面A 创建 viewport", ex);
-                return false;
-            }
-        }
-
-        private float GetRightMargin()
-        {
-            // offsetMax.x = Right Person 左边缘 - Container 右边缘（负数，约 -650）。
-            try
-            {
-                ResolveRightPerson();
-                if (_rightPerson != null && _contentSnapshot.Parent != null)
-                {
-                    var parentRect = _contentSnapshot.Parent as RectTransform;
-                    if (parentRect != null)
-                    {
-                        var parentCorners = new Vector3[4];
-                        parentRect.GetWorldCorners(parentCorners);
-                        var parentRight = Mathf.Max(parentCorners[2].x, parentCorners[3].x);
-
-                        var rightPersonCorners = new Vector3[4];
-                        _rightPerson.GetWorldCorners(rightPersonCorners);
-                        var rightPersonLeft = Mathf.Min(rightPersonCorners[0].x, rightPersonCorners[1].x);
-
-                        var margin = rightPersonLeft - parentRight;
-                        if (margin < -8f)
-                        {
-                            return margin;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Debug("计算右侧保留宽度失败: " + ex.Message);
-            }
-
-            return -DefaultRightReserved;
-        }
-
-        private void ConfigureScrollForViewport(float totalWidth, Vector2 card)
-        {
-            try
-            {
-                if (_viewportRt == null || _content == null)
-                {
-                    return;
-                }
-
-                _viewportRt.offsetMax = new Vector2(GetRightMargin(), 0f);
-
-                _content.SetParent(_viewportRt, false);
-                _content.anchorMin = new Vector2(0f, 1f);
-                _content.anchorMax = new Vector2(0f, 1f);
-                _content.pivot = new Vector2(0f, 1f);
-                _content.anchoredPosition = new Vector2(_leftInset, 0f);
-                _content.sizeDelta = new Vector2(Mathf.Max(totalWidth, 1f), Mathf.Max(_baselineSize.y, card.y, 1f));
-
-                if (_scroll != null)
-                {
-                    _scroll.horizontal = true;
-                    _scroll.vertical = false;
-                    _scroll.movementType = ModConfig.Elastic ? ScrollRect.MovementType.Elastic : ScrollRect.MovementType.Clamped;
-                    _scroll.scrollSensitivity = ModConfig.WheelSpeed;
-                    _scroll.enabled = true;
-                }
-
-                UILayoutTools.MarkForRebuild(_content);
-                UILayoutTools.MarkForRebuild(_viewportRt);
-            }
-            catch (Exception ex)
-            {
-                Log.Exception("界面A 配置滚动几何", ex);
-            }
-        }
-
         /// <summary>
         /// v4.2.4 回退方案：ScrollRect 直接加在 TraderCards 上（不改变父级/锚点、无遮罩），
         /// 但 viewport 改为“卡片可见区”的隐藏 RectTransform（见 <see cref="EnsureKaenoViewport"/>）。
@@ -999,10 +871,378 @@ namespace AdaptiveTraderUI
             }
         }
 
+        // ------------------------------------------------------------------ v1.1.0 卡条位置记忆 / 选中商人匹配
+
+        private bool CanScroll()
+        {
+            return _scroll != null && _scroll.enabled && _content != null;
+        }
+
+        /// <summary>
+        /// v1.1.0：应用末尾决定卡条最终位置（取代 v5.0.0 里单独的一次 ApplyPreservedScrollPosition 调用）。
+        ///
+        /// "config-change" → 完全保持 v5.0.0 行为：只把重应用前的 normalized 写回去，不做匹配/记忆决策
+        ///                    （避免“改设置→卡条跳走”）。
+        /// 其它原因（"Show" 等）→ 选中商人变了就对齐到它；没变就恢复记忆位置；都没有就从第一张卡开始。
+        /// </summary>
+        private void ApplyScrollIntent(string reason)
+        {
+            try
+            {
+                if (!CanScroll())
+                {
+                    // 没有 ScrollRect（Trader Strip Scrolling=false / 卡片不足一屏 / 创建失败）：
+                    // 本特性自然不生效，不打日志、不抛异常。
+                    return;
+                }
+
+                HookScrollChanged();
+
+                Canvas.ForceUpdateCanvases();
+                UILayoutTools.ForceRebuild(_content);
+
+                if (reason == "config-change")
+                {
+                    ApplyPreservedScrollPosition();
+                    return;
+                }
+
+                ApplyStripIntent(reason);
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("界面A 恢复滚动位置", ex);
+            }
+        }
+
+        private void ApplyStripIntent(string reason)
+        {
+            var selectedId = GetSelectedTraderId();
+            var cardIndex = FindSelectedCardIndex(selectedId);
+            var changed = !string.Equals(selectedId, _lastSelectedId, StringComparison.Ordinal);
+
+            var target = 0f; // 0 = 第一张卡（等价 v5.0.0 行为）
+            var branch = "start";
+
+            if (ModConfig.MatchSelectedTraderEnabled && changed && cardIndex >= 0)
+            {
+                float aligned;
+                if (TryComputeAlignedNormalized(cardIndex, ModConfig.SelectedTraderAlignment, out aligned))
+                {
+                    target = aligned;
+                    branch = "align";
+                }
+
+                // 对齐算不出来（几何缺失/不可滚）时 target 保持 0f = 回退第一张卡（等价 v5.0.0 行为）
+            }
+            else if (ModConfig.RememberStripPositionEnabled && _hasMemory)
+            {
+                target = _memoryNormalized;
+                branch = "memory";
+            }
+
+            SetHorizontalNormalized(target);
+
+            // 每次应用都更新（含对齐分支），保证下一次“商人没变 → 恢复记忆位置”依然成立。
+            _lastSelectedId = selectedId;
+
+            // 目标位置就是用户此刻看到的位置，写回记忆，避免下次进入被当成“用户手动滚动”。
+            if (ModConfig.RememberStripPositionEnabled)
+            {
+                _memoryNormalized = target;
+                _hasMemory = true;
+            }
+
+            Log.Debug("界面A 卡条位置决策: reason=" + reason
+                      + " selectedId=" + (selectedId ?? "<null>")
+                      + " changed=" + changed
+                      + " branch=" + branch
+                      + " index=" + cardIndex
+                      + " target=" + target.ToString("0.###"));
+
+            if (branch == "align" && changed)
+            {
+                Log.Info("界面A 卡条已匹配选中商人: id=" + selectedId
+                         + " side=" + ModConfig.SelectedTraderAlignment
+                         + " index=" + cardIndex
+                         + " normalized=" + target.ToString("0.###"));
+            }
+        }
+
+        private void SetHorizontalNormalized(float value)
+        {
+            try
+            {
+                if (_scroll == null)
+                {
+                    return;
+                }
+
+                var clamped = Mathf.Clamp01(value);
+                _applyingScroll = true;
+                try
+                {
+                    _scroll.horizontalNormalizedPosition = clamped;
+                }
+                finally
+                {
+                    _applyingScroll = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _applyingScroll = false;
+                Log.Exception("界面A 卡条位置应用", ex);
+            }
+        }
+
+        private void HookScrollChanged()
+        {
+            try
+            {
+                if (_scroll == null || _scrollHookAttached)
+                {
+                    return;
+                }
+
+                // 幂等：先摘再挂，重复应用不会产生重复监听。
+                _scroll.onValueChanged.RemoveListener(OnStripScrolled);
+                _scroll.onValueChanged.AddListener(OnStripScrolled);
+                _scrollHookAttached = true;
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("界面A 挂接滚动记忆", ex);
+            }
+        }
+
+        private void UnhookScrollChanged()
+        {
+            try
+            {
+                if (!_scrollHookAttached)
+                {
+                    return;
+                }
+
+                if (_scroll != null)
+                {
+                    _scroll.onValueChanged.RemoveListener(OnStripScrolled);
+                }
+
+                _scrollHookAttached = false;
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("界面A 解除滚动记忆", ex);
+            }
+        }
+
+        /// <summary>用户手动滚动时记录位置（自己写位置时由 <see cref="_applyingScroll"/> 抑制）。</summary>
+        private void OnStripScrolled(Vector2 value)
+        {
+            try
+            {
+                if (_applyingScroll || _scroll == null)
+                {
+                    return;
+                }
+
+                if (!ModConfig.RememberStripPositionEnabled)
+                {
+                    return;
+                }
+
+                // 用实际值，不用回调参数 v.x：Elastic 回弹/夹取后的真实位置以 ScrollRect 为准。
+                _memoryNormalized = Mathf.Clamp01(_scroll.horizontalNormalizedPosition);
+                _hasMemory = true;
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("界面A 记录滚动位置", ex);
+            }
+        }
+
+        private string GetSelectedTraderId()
+        {
+            try
+            {
+                if (_screen == null)
+                {
+                    return null;
+                }
+
+                var trader = _screen.Trader;
+                if (trader == null)
+                {
+                    return null;
+                }
+
+                var info = trader.Info;
+                return info == null ? null : info.Id;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("界面A 读取当前选中商人失败（不做匹配）: " + ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 选中商人在 TradersList 里的序号（= TraderCards 子节点序号：method_4 按该列表顺序 Instantiate）。
+        /// 用商人 Id 比较，不用索引硬编码：装了新 mod 商人后列表顺序可能变。
+        /// </summary>
+        private int FindSelectedCardIndex(string selectedId)
+        {
+            try
+            {
+                if (_screen == null || string.IsNullOrEmpty(selectedId))
+                {
+                    return -1;
+                }
+
+                var list = _screen.TradersList;
+                if (list == null)
+                {
+                    return -1;
+                }
+
+                var index = 0;
+                foreach (var trader in list)
+                {
+                    if (trader != null)
+                    {
+                        var info = trader.Info;
+                        if (info != null && string.Equals(info.Id, selectedId, StringComparison.Ordinal))
+                        {
+                            return index;
+                        }
+                    }
+
+                    index++;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("界面A 查找选中商人卡片", ex);
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// v1.1.0：把第 index 张卡按 side 对齐后换算成 horizontalNormalizedPosition。
+        ///   W = content 宽、V = viewport 宽、left = 卡片左边缘距 content 左边缘的距离（参考像素）
+        ///   Start: S = left；Center: S = left + 卡宽/2 − V/2；End: S = left + 卡宽 − V
+        ///   S 夹到 [0, W−V]，normalized = S / (W−V)
+        /// 卡片不足一屏（W ≤ V + 0.5）时返回 false（不滚、不写位置）。
+        /// </summary>
+        private bool TryComputeAlignedNormalized(int cardIndex, AlignedSide side, out float normalized)
+        {
+            normalized = 0f;
+            try
+            {
+                if (_content == null || _scroll == null || cardIndex < 0)
+                {
+                    return false;
+                }
+
+                var contentWidth = _content.rect.width;
+                if (contentWidth < 1f)
+                {
+                    return false;
+                }
+
+                var viewport = _scroll.viewport;
+                var viewportWidth = viewport == null ? 0f : viewport.rect.width;
+
+                var cardWidth = 0f;
+                var left = 0f;
+                var gotGeometry = false;
+
+                if (cardIndex < _content.childCount)
+                {
+                    var cardRect = _content.GetChild(cardIndex) as RectTransform;
+                    if (cardRect != null)
+                    {
+                        // 用四角换算（与 ComputeChildrenExtent 同一套测量）。
+                        // 注意不能用 anchoredPosition.x 当左边缘：卡片 prefab pivot=(0.5,0.5)，
+                        // HorizontalLayoutGroup 会把 anchoredPosition.x 设成“pos + 卡宽*pivot.x”（= 卡片中心）。
+                        float minX;
+                        float maxX;
+                        if (UILayoutTools.TryGetLocalXRange(cardRect, _content, out minX, out maxX)
+                            && maxX - minX > 1f)
+                        {
+                            // content 局部坐标原点在它的 pivot 上 → 换算成“距 content 左边缘”的距离
+                            left = minX - _content.rect.xMin;
+                            cardWidth = maxX - minX;
+                            gotGeometry = true;
+                        }
+                    }
+                }
+
+                if (!gotGeometry)
+                {
+                    // 回退：HorizontalLayoutGroup 布局公式 left = padding.left + i*(卡宽+spacing)
+                    var metrics = UILayoutTools.Measure(_content, null, _cardPrefab);
+                    var padding = metrics.Padding ?? new RectOffset();
+                    cardWidth = metrics.CardSize.x;
+                    if (cardWidth < 1f)
+                    {
+                        return false;
+                    }
+
+                    left = padding.left + cardIndex * (cardWidth + Mathf.Max(0f, metrics.Spacing.x));
+                }
+
+                if (viewportWidth < 1f)
+                {
+                    viewportWidth = ComputeVisibleWidth(cardWidth);
+                }
+
+                if (viewportWidth < 1f)
+                {
+                    return false;
+                }
+
+                var range = contentWidth - viewportWidth;
+                if (range <= 0.5f)
+                {
+                    // 内容不比可见区宽：没有可滚行程，不需要对齐。
+                    return false;
+                }
+
+                var right = left + cardWidth;
+                float scrollTarget;
+                switch (side)
+                {
+                    case AlignedSide.Start:
+                        scrollTarget = left;
+                        break;
+                    case AlignedSide.End:
+                        scrollTarget = right - viewportWidth;
+                        break;
+                    default:
+                        scrollTarget = left + cardWidth * 0.5f - viewportWidth * 0.5f;
+                        break;
+                }
+
+                scrollTarget = Mathf.Clamp(scrollTarget, 0f, range);
+                normalized = Mathf.Clamp01(scrollTarget / range);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("界面A 卡条匹配", ex);
+                return false;
+            }
+        }
+
         private void RestoreVanilla(string reason)
         {
             try
             {
+                UnhookScrollChanged(); // v1.1.0：滚动结构要拆掉前先摘掉记忆监听（否则会监听一个已禁用的 ScrollRect）
                 if (_kaenoFallback)
                 {
                     if (_scroll != null)
@@ -1029,26 +1269,7 @@ namespace AdaptiveTraderUI
                     return;
                 }
 
-                if (_viewportGo != null)
-                {
-                    if (_scroll != null)
-                    {
-                        _scroll.enabled = false;
-                    }
-
-                    if (_snapshotValid && _contentSnapshot.Parent != null)
-                    {
-                        _content.SetParent(_contentSnapshot.Parent, false);
-                        _contentSnapshot.Restore(_content);
-                    }
-
-                    UnityEngine.Object.Destroy(_viewportGo);
-                    _viewportGo = null;
-                    _viewportRt = null;
-                    _scroll = null;
-                    Log.Debug("界面A 已还原原版布局（原因: " + reason + "）");
-                }
-                else if (_snapshotValid)
+                if (_snapshotValid)
                 {
                     _contentSnapshot.Restore(_content);
                 }

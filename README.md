@@ -1,12 +1,12 @@
 # HPT-AdaptiveTraderUI
 
-适用于 **SPT 4.1.6 / EFT 1.0.x（Unity 2022.3，BepInEx 5.4.23.5）** 的商人界面增强 BepInEx 插件。
+适用于 **SPT 4.1.6 / EFT 0.16.9.5.40743（Unity 2022.3，BepInEx 5.4.23.5）** 的商人界面增强 BepInEx 插件。
 
 把 **Kaeno-TraderScrolling**（顶部商人卡片条横向滚动 + 玩家信息面板美化）与
 **AdjustableTraderRows**（商人选择列表可调每行数量）两个功能合并为一个插件。
 本项目为独立实现，与上述项目的作者无隶属关系，详见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
-> **English summary**: A BepInEx plugin for SPT 4.1.6 / EFT 1.0.x that adds horizontal mouse-wheel
+> **English summary**: A BepInEx plugin for SPT 4.1.6 / EFT 0.16.9.5.40743 that adds horizontal mouse-wheel
 > scrolling to the top trader card strip, configurable merchants-per-row for the merchant selection
 > list (with wrap/vertical scrolling), and optional player-card visual tweaks. It is an independent
 > reimplementation inspired by Kaeno-TraderScrolling (MIT) and AdjustableTraderRows (Unlicense).
@@ -15,7 +15,10 @@
 
 - **最新发布版（推荐，普通玩家直接下载）**：
   [GitHub Releases](https://github.com/henryplaytime/HPT-AdaptiveTraderUI/releases/latest)
-- 当前版本：**v5.0.0** — [发布说明](https://github.com/henryplaytime/HPT-AdaptiveTraderUI/releases/tag/v5.0.0)
+- 当前版本：**v1.1.0** — [发布说明](https://github.com/henryplaytime/HPT-AdaptiveTraderUI/releases/tag/v1.1.0)
+
+> **版本号说明**：自 v1.1.0 起版本号重置为 `1.x`。上一版是 `v5.0.0`；`v1.1.0` 是它的**功能超集**（新增卡条记忆与匹配），
+> **不是降级**，数字变小只是因为换了编号体系。
 - 发布包内包含：`BepInEx/plugins/HPT-AdaptiveTraderUI.dll`、安装说明、LICENSE、第三方许可、CHANGELOG、
   示例配置与 SHA256 校验值。
 - 源码用户：直接按下方「构建」一节从源码编译。
@@ -39,6 +42,7 @@
 |---|---|---|
 | **界面 A：商人卡片条** | 进入商人后，屏幕顶部 Trade/Tasks/Services 标签上方那一排商人头像卡 | 商人超过约 10 个时，右侧卡片不再被玩家信息面板永久挡住：整条卡片可**鼠标滚轮横向滚动**；滚到最右端可看到最后一个商人 |
 | **界面 B：商人选择列表** | 主界面点商人图标后进入的商人列表（原版一行约 5 个） | `Wrap`：一行 N 个、自动换行，超出高度时**纵向滚动**；`Horizontal`：全部排成一行、横向滚动；`None`：保持原版 |
+| **界面 A：卡条记忆 + 匹配** | 同一个顶部商人卡片条 | 重新进入商人界面时**停在你自己上次滚到的位置**（不再跳回第一张卡）；在商人列表里换成另一个商人后，卡条**自动滚到该商人的卡片**，并按配置 靠左 / 居中 / 靠右 对齐 |
 | **玩家卡美化** | 商人界面右侧玩家信息面板 | 金额右移、间距调整、背景 Tile 激活加宽、背景变黑（可关闭） |
 
 其他特性：
@@ -116,6 +120,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package.ps1
 | `Scroll Wheel Speed` | `30` | 鼠标滚轮滚动速度（每格像素，1–500）；横向/纵向都用它 |
 | `Trader Strip Scrolling` | `true` | 界面A（顶部卡片条）是否启用横向滚轮滚动；`false` = 该界面完全原版 |
 | `Use Elastic` | `true` | 界面A 滚动越界是否弹性回弹：`true` = 弹性，`false` = 硬性夹取（界面B 固定硬性夹取） |
+| `Remember Strip Position` | `true` | 界面A 是否记住卡条滚动位置：`true` = 回到商人界面时停在你自己上次滚到的位置；`false` = 每次从第一张卡开始（v5.0.0 行为）。只记在本次游戏进程内存里 |
+| `Match Selected Trader` | `true` | 在商人列表里换成另一个商人后，界面A 卡条是否自动滚到该商人卡片处；`false` = 只恢复上次位置，不主动跳转 |
+| `Selected Trader Alignment` | `Center` | 匹配时的对齐方式：`Start`（靠左）/ `Center`（居中）/ `End`（靠右）；也接受 `Left` / `Middle` / `Right`、`靠左` / `居中` / `靠右` |
 | `Enable Player Card Tweaks` | `true` | 玩家卡/金钱面板美化开关 |
 
 ### `[Layout]`（作用于界面B：商人选择列表）
@@ -187,7 +194,7 @@ config/
 
 ## 已知限制
 
-- 仅针对 **SPT 4.1.6 / EFT 1.0.x** 开发；其它游戏版本请勿混用。
+- 仅针对 **SPT 4.1.6 / EFT 0.16.9.5.40743** 开发；其它游戏版本请勿混用。
 - 与其它修改商人/交易界面的模组（例如 Tyfon.UIFixes、TraderSearch、TraderGen 等）未做逐一兼容验证。
   如出现异常，可先把 `Trader Strip Scrolling = false`、`Merchants Layout Mode = None` 回退原版。
 - 旧版 v4.2.4 的配置路径为 `com.kaeno.TraderScrolling.cfg`；v5.0.0 使用新 GUID，配置不会自动迁移。

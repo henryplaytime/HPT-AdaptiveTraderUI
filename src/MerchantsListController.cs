@@ -29,8 +29,6 @@ namespace AdaptiveTraderUI
     internal sealed class MerchantsListController : MonoBehaviour
     {
         private const string ViewportObjectName = "KaenoMerchantsViewport";
-        private const float FallbackCardWidth = 177.25f;
-        private const float FallbackCardHeight = 205f;
         private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         private static bool _reflectionResolved;
